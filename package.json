@@ -5,7 +5,9 @@
   "scripts": {
     "start:dev": "nodemon ./bin/www",
     "start": "node ./bin/www",
-    "watch": "webpack --mode development --watch"
+    "build": "webpack --mode development",
+    "watch": "webpack --mode development --watch",
+    "build:prod": "webpack --mode production"
   },
   "dependencies": {
     "body-parser": "~1.18.2",

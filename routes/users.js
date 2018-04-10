@@ -910,7 +910,7 @@ router.get('/', function(req, res) {
 		break;
 	case 'four': 
 		setTimeout(function() {
-			res.send({status: 'hui'});
+			res.send({status: 'hopheilalalei'});
 		}, 1000);
 		break;		
 	}
