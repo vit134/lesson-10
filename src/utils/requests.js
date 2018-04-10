@@ -1,51 +1,39 @@
-console.log('request.js');
-
 class Request {
-    constructor() {
-        this._stack = [];
-        this._promise;
-        this._lastResult;
-    }
+	constructor() {
+		this._promise;
+		this._lastPromise;
+		this._lastResult = null;
+	}
     
-    get(url, onResolve, onReject) {
-        if (!this._promise) {
-            this._promise = this.addTostack({
-                url: url,
-                res: onResolve,
-                rej: onReject
-            })
-        } else {
-            this._promise
-                .then(() => this.addTostack({
-                    url: url,
-                    res: onResolve,
-                    rej: onReject
-                }))
-        }
+	get() {
+		if (!this._promise) {
+			this._promise = this.addTostack(...arguments);
+		} else {
+			this._promise
+				.then(() => {
+					this._lastPromise = this.addTostack(...arguments);
+					this._promise = this._lastPromise;
+					return this._promise;
+				});
+		}
 
-        return this;
-    }
+		return this;
+	}
 
-    addTostack(el) {
-        return fetch(el.url)
-            .then(res => {
-                return res.json();
-            })
-            .then(data => {
-                el.res(this._lastResult, data);
-                this._lastResult = data;
-
-                return;
-            })
-            .catch(error => {
-                el.rej(error)
-            })
-    }
-
-
-    getStack() {
-        return this._stack;
-    }
+	addTostack(url, resolve, reject) {
+		return fetch(url)
+			.then(res => {
+				return res.json();
+			})
+			.then(data => {
+				resolve(this._lastResult, data);
+				this._lastResult = data;
+			})
+			.catch(error => {
+				reject({url: url, error: error});
+				throw new Error('errror');
+			});
+	}
 } 
 
 
