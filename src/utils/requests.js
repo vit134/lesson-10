@@ -1,8 +1,10 @@
 export default class Request {
 	constructor() {
 		this._promise; // текущий промис
+		this._allResults = []; // результаты всех запросов
 		this._lastResult = null; // результат последнего промиса
 		this._promises = []; // массив промиссов
+		this._doneHandler;
 	}
 	
 	/**
@@ -18,6 +20,14 @@ export default class Request {
 		}
 		return this;
 	}
+	/**
+	 * @param {function} handler : функция обработчик 
+	 */
+	done(handler) {
+		this._doneHandler = handler;
+		this._promises.push(this._doneHandler);
+		return this;
+	}
 
 	/**
 	 * Удаляет первый промис из массива и устанавливает его в качестве текущего промиса
@@ -25,8 +35,20 @@ export default class Request {
 	_next() {
 		if (this._promises.length) {
 			let arg = this._promises.shift();
-			this._promise = this._addToStack(...arg);
+
+			if (typeof arg !== 'function') {
+				this._promise = this._addToStack(...arg);
+			} else {
+				this._done();
+			}
 		}
+	}
+
+	/**
+	 * Возвращает функцию обработчик с результатами всех запросов
+	 */
+	_done() {
+		return this._doneHandler(this._allResults);
 	}
 	
 	/**
@@ -40,11 +62,13 @@ export default class Request {
 			.then(data => {
 				resolve(this._lastResult, data);
 				this._lastResult = data;
+				this._allResults.push(data);
 			})
 			.catch(error => {
 				reject({url: url, error: error});
 				this._lastResult = null;
-				throw new Error('error', error);
+				this._allResults.push(null);
+				throw new Error(error);
 			})
 			.then(() => {
 				this._next();
